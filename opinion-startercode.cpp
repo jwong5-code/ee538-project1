@@ -71,8 +71,12 @@ int get_majority_friend_opinions(int node)
         }
     }
 
-    if (one > zero) return 1;
-    else return 0; // Tie or more zeros
+    if (one > zero) {
+        return 1;
+    } 
+    else {
+        return 0;
+    }
 }
 
 // Calculate new opinions for all voters and return if anyone's opinion changed
