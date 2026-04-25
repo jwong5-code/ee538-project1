@@ -1,3 +1,7 @@
+# Project 1.2
+
+Updates: I removed the edge_list and replaced adjacency matrix with adjacency list. I also reduced neighbor check to reduce runtime.
+
 # EE538: Project 1: Opinion Diffusion using Linked Lists
 
 ## Overview
