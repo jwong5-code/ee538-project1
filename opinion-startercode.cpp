@@ -19,27 +19,12 @@ int total_nodes = 0; // We keep track of the total number of nodes based on larg
 std::vector<int> opinions;
 
 // global adjacency matrix initialized later
-std::vector<std::vector<int>> adj;
-
-// edge list: each row contains {source, target}
-// Edge - connection
-// Vertice - Points
-std::vector<std::vector<int>> edge_list;
-
-void build_adj_matrix()
-{
-    // Adjancy matrix is initialized to 0's by default or switched to 1's if edge exists.
-    adj.resize(total_nodes, std::vector<int>(total_nodes, 0));
 
 
-    // Go through each edge in the edge list
-    for (int i = 0; i < edge_list.size(); i++) {
-        int source = edge_list[i][0];
-        int target = edge_list[i][1];
-        adj[source][target] = 1; 
-    }
-    
-}
+// NEW
+// Adjacency list: adj_list[i] stores all nodes that influence node i.
+// More space-efficient than a matrix for sparse graphs: O(n+e) vs O(n^2)
+std::vector<std::vector<int>> adj_list;
 
 double calculate_fraction_of_ones()
 {
@@ -53,26 +38,29 @@ double calculate_fraction_of_ones()
     return count / (opinions.size() * 1.0); 
 }
 
-// For a given node, count majority opinion among its neighbours. Tie -> 0.
-// Look at all neighbors within adj matrix
-// Count how many have opinion 1 vs 0
+// NEW
+// Only iterates over actual neighbors, not all nodes. O(degree) vs O(n).
 int get_majority_friend_opinions(int node)
 {
     int one = 0;
     int zero = 0;
 
-    for (int j = 0; j < total_nodes; j++) {
-        if (adj[j][node] == 1) {
-            if (opinions[j] == 1) {
-                one++;
-            } else {
+    for (int j = 0; j < adj_list[node].size(); j++) {
+        int neighbor = adj_list[node][j];
+        if (opinions[neighbor] == 1) {
+            one++;
+        }
+            else {
                 zero++;
             }
-        }
     }
 
-    if (one > zero) return 1;
-    else return 0; // Tie or more zeros
+    if (one > zero) {
+        return 1;
+    } 
+    else {
+        return 0;
+    }
 }
 
 // Calculate new opinions for all voters and return if anyone's opinion changed
@@ -102,8 +90,6 @@ int main() {
     read_opinions("opinions.txt"); 
     read_edges("edge_list.txt");
 
-    // convert edge list into adjacency matrix once we know total_nodes
-    build_adj_matrix();
     
     cout << "Total nodes: " << total_nodes << endl;
     
@@ -158,17 +144,21 @@ void read_opinions(string filename)
     file.close();
 }
 
-// Read edge list from file and update total nodes as needed.
+// NEW
+// Builds adjacency list directly from file, eliminating need for edge_list
+// and build_adj_matrix. For sparse networks this avoids O(n^2) space overhead.
 void read_edges(string filename)
 {
     ifstream file(filename);
     int source, target;
     
+    
     while(file >> source >> target)
     {
-        edge_list.push_back({source, target});
-        if(source >= total_nodes) total_nodes = source+1;
-        if(target >= total_nodes) total_nodes = target+1;
+        if (target >= adj_list.size()) {
+            adj_list.resize(target + 1);
+        }
+        adj_list[target].push_back(source);
     }
     file.close();
 }
